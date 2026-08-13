@@ -7,6 +7,10 @@
 Water Resources Planning* — Ruopu Li, Michael Edidem, Pouria Kharazi, Hyungtak
 Lee, Yididiya Nadew, Chris Quinn, Kofi Akamai, Steve Q. Hu.
 
+> **This manuscript is currently under peer review.** This repository is
+> shared for review and reproducibility purposes only — see [License and
+> status](#license-and-status) below before reusing anything in it.
+
 CHIRRP couples a natural-language LLM interface (the paper's "social layer")
 with a physics-informed neural network (PINN) surrogate of groundwater
 drawdown (the "physical layer"), so a stakeholder can ask a plain-language
@@ -270,6 +274,12 @@ wasn't used by the deployed validation path.)
   evaluated with real stakeholders; single-well/homogeneous-aquifer scope
   only; no reproducible chat-to-model benchmark yet; GPU path exists but the
   deployed app currently runs CPU inference.
-- Screenshots still missing for the **Accuracy** and **Regulations** pages —
-  add them the same way (drop into `docs/images/`, reference in this README)
-  whenever they're captured.
+## License and status
+
+This repository accompanies a manuscript **currently under peer review**. It
+is made available for review and reproducibility purposes only — see
+[`LICENSE`](LICENSE). No part of this repository may be used, copied,
+modified, or redistributed without prior written permission from the authors.
+
+For permissions or inquiries, contact **Dr. Ruopu Li** (ruopu.li@siu.edu) or
+**Michael Edidem** (michael.edidem@siu.edu).

@@ -1,0 +1,22 @@
+Copyright (c) 2026 Ruopu Li, Michael Edidem, and co-authors. All rights reserved.
+
+This repository accompanies a manuscript currently under peer review:
+
+  "An End-to-End Hydro-AI Framework for Next-generation Participatory Water
+  Resources Planning" — Ruopu Li, Michael Edidem, Pouria Kharazi, Hyungtak
+  Lee, Yididiya Nadew, Chris Quinn, Kofi Akamai, and Steve Q. Hu.
+
+No part of this repository — including but not limited to the source code,
+trained model weights, data, figures, and documentation — may be used,
+copied, modified, merged, published, distributed, sublicensed, and/or sold,
+in whole or in part, without prior written permission from the authors.
+
+This repository is made available solely for review and reproducibility
+purposes in connection with the associated manuscript submission. Its
+availability does not constitute a grant of any license, express or implied,
+to any of the above.
+
+For permissions or inquiries, please contact:
+
+  Dr. Ruopu Li      — ruopu.li@siu.edu
+  Michael Edidem    — michael.edidem@siu.edu
