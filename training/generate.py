@@ -54,9 +54,10 @@ Xg, Yg = np.meshgrid(xcent, ycent)
 obs_points = np.column_stack([Xg.ravel(), Yg.ravel()])
 
 # ==========================================================
-# Q values to simulate
+# Q values to simulate (all 10 anchor rates reported in paper Table 4)
 # ==========================================================
-Q_list = [-50000.0, -45000.0, -40000.0, -35000.0, -30000.0, -25000.0]
+Q_list = [-50000.0, -45000.0, -44000.0, -42000.0, -40000.0,
+          -38000.0, -36000.0, -35000.0, -30000.0, -25000.0]
 
 
 def run_modflow(Qwell):
