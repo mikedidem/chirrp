@@ -21,11 +21,6 @@ study and Appendix A.
   <br><em>Figure 1 (paper) — dual-architecture overview: LLM social layer ↔ PINN physical layer.</em>
 </p>
 
-<p align="center">
-  <img src="docs/images/app-studio-screenshot.png" alt="CHIRRP Explore Scenarios page: chat-driven scenario input, decision readout, regulatory context, hydraulic head map, and drawdown time series" width="850">
-  <br><em>Figure 2 (paper) — the implemented web application ("Explore Scenarios" page): a stakeholder's natural-language pumping request parsed into a validated scenario, with predicted drawdown, envelope-validity status, regulatory context, and the resulting head field.</em>
-</p>
-
 ## How to use
 
 The live app's own **"How to use"** page (top nav, right side) gives a
@@ -67,6 +62,30 @@ calls, consistent with the paper's Table 6).
 <p align="center">
   <img src="docs/images/app-explore-scenarios-live.png" alt="Live CHIRRP Explore Scenarios session: -15% pumping request, decision readout, regulatory context, and hydraulic head map" width="850">
   <br><em>Live demo session: "Reduce pumping by 15 percent."</em>
+</p>
+
+**Compare** overlays 2–4 pumping scenarios (from saved sessions or ad-hoc
+percent changes) on one drawdown curve and a delta table against a baseline,
+flagging whichever option keeps drawdown lowest while staying inside the
+trained envelope — each run is a millisecond surrogate evaluation, so the
+comparison itself is effectively instant.
+
+<p align="center">
+  <img src="docs/images/app-compare.png" alt="CHIRRP Compare page: overlaid drawdown curves for -15%, 0%, and +10% pumping scenarios, with a delta table against the baseline" width="850">
+  <br><em>Compare page: three pumping scenarios overlaid, with the −15% case flagged as lowest drawdown and baseline.</em>
+</p>
+
+**Find Limits** inverts the problem: instead of running a scenario forward,
+a stakeholder sets a tolerable drawdown at a point of interest and the app
+searches the trained envelope for the maximum pumping rate that satisfies it
+— the constraint-driven search described in the paper's §4.4 Future Work
+(optimization through the integrated Hydro-AI model), made tractable because
+each surrogate evaluation is milliseconds (500 admissible options evaluated
+in 256 ms in the example below).
+
+<p align="center">
+  <img src="docs/images/app-find-limits.png" alt="CHIRRP Find Limits page: solving for the maximum pumping rate that keeps drawdown under a 6 m limit at the well, with a decision readout and drawdown-vs-pumping-change curve" width="850">
+  <br><em>Find Limits page: solving for the maximum pumping rate that keeps drawdown under a 6 m limit at the well.</em>
 </p>
 
 ---
@@ -233,7 +252,8 @@ wasn't used by the deployed validation path.)
 | §3.4, Figure 3/4, Table 4 (accuracy: RMSE 0.18 m, R²=0.98) | Surrogate vs. MODFLOW-2005 | `training/evaluation/revalidation_per_rate.csv`, `fig4_accuracy_envelope.png` |
 | §3.4, Figure 7 (mass-balance, ≈10% residual) | Physical fidelity / conservation | `training/evaluation/revalidation_massbalance.csv` |
 | §3.4, Table 6 (latency: 0.11 s CPU / 3.2 ms GPU / 5.7 s end-to-end) | Computational efficiency | `training/revalidate_full.py`; end-to-end timing in `app/chirrp/backend/controller/pinn_controller.py` |
-| App screenshot, Figure 2 | The implemented web application | `app/hydroproject-ui/` — live at https://morule-hydro.hf.space |
+| Figure 2 / app screenshots (this README) | The implemented web application | `app/hydroproject-ui/` — live at https://morule-hydro.hf.space |
+| §4.4 Future Work (constraint-driven search) | Goal-seeking a scenario from a stakeholder constraint | `app/hydroproject-ui/src/app/pages/goal-seek/` (**Find Limits** page) |
 
 ## Status
 
@@ -250,5 +270,6 @@ wasn't used by the deployed validation path.)
   evaluated with real stakeholders; single-well/homogeneous-aquifer scope
   only; no reproducible chat-to-model benchmark yet; GPU path exists but the
   deployed app currently runs CPU inference.
-- Not yet done: this consolidated repo has no git history of its own yet
-  (each half was copied in from its original location, not `git init`'d here).
+- Screenshots still missing for the **Accuracy** and **Regulations** pages —
+  add them the same way (drop into `docs/images/`, reference in this README)
+  whenever they're captured.
