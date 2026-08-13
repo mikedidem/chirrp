@@ -284,10 +284,10 @@ wasn't used by the deployed validation path.)
 - PINN surrogate trained and validated against MODFLOW-2005 (two-stage,
   hard-BC, 10 anchor pumping rates spanning the −37.5%/+25% envelope) — see
   `training/evaluation/`, matching paper Section 3.4 / Appendix A.
-- App fully refactored around the surrogate: LLM scenario parsing → PINN
-  inference → live/precomputed MODFLOW validation → RAG regulatory context,
-  with an Angular UI (Overview / Explore Scenarios / Compare / Accuracy /
-  Find Limits / Regulations / How to use).
+- The application implements the full pipeline end to end: LLM scenario
+  parsing → PINN inference → live/precomputed MODFLOW validation → RAG
+  regulatory context, exposed through an Angular UI (Overview / Explore
+  Scenarios / Compare / Accuracy / Find Limits / Regulations / How to use).
 - Deployed as a public, single-container Hugging Face Space:
   **https://morule-hydro.hf.space** (health check: `/healthz`).
 - Per the paper's own Limitations (§4.3) and Future Work (§4.4): not yet
