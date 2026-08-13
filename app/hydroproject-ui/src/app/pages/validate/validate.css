@@ -1,0 +1,141 @@
+.anchor-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.anchor-chip {
+  font-family: var(--font);
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0.32rem 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.anchor-chip:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.anchor-chip.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.anchor-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.custom-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.live-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  padding-bottom: 0.55rem;
+  white-space: nowrap;
+}
+
+.live-toggle input {
+  accent-color: var(--accent);
+}
+
+.maps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.map-card {
+  padding: 0.6rem 0.7rem;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.latency-note p {
+  font-size: 0.86rem;
+}
+
+/* Validation confidence panel */
+.confidence-panel {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.05rem;
+}
+
+.conf-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.conf-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-right: 0.2rem;
+}
+
+.conf-badge,
+.envelope-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 650;
+  border-radius: 999px;
+  padding: 0.22rem 0.7rem;
+  border: 1px solid transparent;
+}
+
+.env-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.conf-badge.ok,
+.envelope-pill.ok { color: var(--ok); background: var(--ok-soft); border-color: rgba(74, 222, 128, 0.35); }
+.conf-badge.warn { color: var(--warn); background: var(--warn-soft); border-color: rgba(251, 191, 36, 0.35); }
+.conf-badge.danger { color: var(--danger); background: var(--danger-soft); border-color: rgba(251, 113, 133, 0.35); }
+
+.conf-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0.6rem 0 0;
+}
+
+.conf-plain {
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin: 0.5rem 0 0;
+}
+
+@media (max-width: 1100px) {
+  .maps-grid,
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}

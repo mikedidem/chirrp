@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Groundwater Policy Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0d1117; --surface:#161b22; --surface2:#1c2230; --border:#2a3340;
+    --accent:#4ea8de; --accent2:#79c0ff; --green:#3fb950; --amber:#d29922;
+    --red:#f85149; --purple:#bc8cff; --text:#e6edf3; --muted:#7d8590; --dim:#484f58;
+  }
+  html,body { height:100%; background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; font-size:15px; line-height:1.6; }
+  .shell { display:grid; grid-template-columns:260px 1fr; height:100vh; }
+  .sidebar { background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:24px 20px; gap:24px; }
+  .sidebar-label { font-size:10px; letter-spacing:1.8px; text-transform:uppercase; color:var(--dim); font-weight:600; margin-bottom:10px; }
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .toggle-label { font-size:13px; color:var(--muted); }
+  .toggle { position:relative; width:38px; height:22px; flex-shrink:0; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-track { position:absolute; inset:0; background:var(--border); border-radius:11px; cursor:pointer; transition:background .2s; }
+  .toggle-thumb { position:absolute; top:3px; left:3px; width:16px; height:16px; background:var(--muted); border-radius:50%; transition:transform .2s,background .2s; pointer-events:none; }
+  .toggle input:checked ~ .toggle-track { background:var(--accent); }
+  .toggle input:checked ~ .toggle-thumb { transform:translateX(16px); background:#fff; }
+  .mode-switcher { display:flex; gap:6px; }
+  .mode-btn { flex:1; padding:7px 6px; border-radius:8px; border:1px solid var(--border); background:none; color:var(--muted); font-family:'Syne',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; text-align:center; }
+  .mode-btn.active { background:var(--surface2); border-color:var(--accent); color:var(--accent2); }
+  .mode-btn:hover:not(.active) { border-color:var(--dim); color:var(--text); }
+  .status-row { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+  .dot { width:7px; height:7px; border-radius:50%; background:var(--dim); flex-shrink:0; }
+  .dot.ok { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .dot.err { background:var(--red); }
+  .sources-list { display:flex; flex-direction:column; gap:6px; flex:1; overflow-y:auto; }
+  .sources-list::-webkit-scrollbar { width:4px; }
+  .sources-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .source-pill { font-size:11px; color:var(--muted); padding:6px 10px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; line-height:1.4; word-break:break-word; }
+  .main { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+  .topbar { padding:18px 32px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .topbar-title { font-family:'DM Serif Display',serif; font-size:18px; font-style:italic; }
+  .topbar-meta { font-size:11px; color:var(--dim); font-family:'DM Mono',monospace; }
+  .chat { flex:1; overflow-y:auto; padding:32px; display:flex; flex-direction:column; gap:28px; }
+  .chat::-webkit-scrollbar { width:5px; }
+  .chat::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  .empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; color:var(--dim); padding:40px; }
+  .empty h2 { font-family:'DM Serif Display',serif; font-size:22px; color:var(--muted); font-weight:400; }
+  .empty p { font-size:13px; max-width:360px; line-height:1.7; }
+  .suggestions { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px; }
+  .suggestion-chip { font-size:12px; padding:6px 14px; border:1px solid var(--border); border-radius:20px; color:var(--muted); cursor:pointer; transition:border-color .15s,color .15s; background:none; font-family:'Syne',sans-serif; }
+  .suggestion-chip:hover { border-color:var(--accent); color:var(--accent2); }
+  .msg { display:flex; flex-direction:column; gap:6px; animation:fadein .25s ease; }
+  @keyframes fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+  .msg-user { align-self:flex-end; max-width:70%; background:var(--surface2); border:1px solid var(--border); border-radius:16px 16px 4px 16px; padding:12px 16px; font-size:14px; }
+  .msg-rag { align-self:flex-start; max-width:82%; display:flex; flex-direction:column; gap:12px; }
+  .rag-header { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .rag-badge { font-size:10px; letter-spacing:1.2px; text-transform:uppercase; color:var(--accent); font-weight:600; font-family:'DM Mono',monospace; }
+  .risk-badge { font-size:10px; padding:2px 8px; border-radius:4px; font-family:'DM Mono',monospace; font-weight:500; }
+  .risk-low { background:rgba(63,185,80,.12); color:var(--green); border:1px solid rgba(63,185,80,.3); }
+  .risk-medium { background:rgba(210,153,34,.12); color:var(--amber); border:1px solid rgba(210,153,34,.3); }
+  .risk-high { background:rgba(248,81,73,.12); color:var(--red); border:1px solid rgba(248,81,73,.3); }
+  .conf-score { font-size:11px; color:var(--dim); font-family:'DM Mono',monospace; }
+  .rag-body { background:var(--surface); border:1px solid var(--border); border-radius:4px 16px 16px 16px; padding:18px 20px; font-size:14px; line-height:1.75; white-space:pre-wrap; }
+  .gen-body { background:var(--surface); border:1px solid rgba(188,140,255,.2); border-radius:4px 16px 16px 16px; padding:18px 20px; font-size:14px; line-height:1.75; white-space:pre-wrap; }
+  .compare-wrap { display:flex; flex-direction:column; gap:16px; width:100%; }
+  .compare-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .compare-col { display:flex; flex-direction:column; gap:10px; }
+  .compare-col-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .compare-col-label.rag-lbl { color:var(--accent); }
+  .compare-col-label.gen-lbl { color:var(--purple); }
+  .sources-panel { border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .sources-header { padding:10px 16px; background:var(--surface2); font-size:11px; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:6px; }
+  .sources-count { background:var(--border); color:var(--dim); font-size:10px; padding:1px 6px; border-radius:3px; }
+  .source-card { padding:12px 16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:4px; }
+  .source-card:hover { background:var(--surface2); }
+  .source-title { font-size:12px; font-weight:600; color:var(--accent2); }
+  .source-url { font-size:11px; color:var(--dim); font-family:'DM Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .source-score { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; }
+  .source-excerpt { font-size:12px; color:var(--muted); line-height:1.5; margin-top:4px; padding-top:6px; border-top:1px solid var(--border); }
+  .msg-error { align-self:flex-start; background:rgba(248,81,73,.08); border:1px solid rgba(248,81,73,.3); border-radius:8px; padding:10px 14px; font-size:13px; color:var(--red); max-width:70%; }
+  .thinking { align-self:flex-start; display:flex; align-items:center; gap:6px; color:var(--muted); font-size:13px; padding:10px 0; }
+  .dots span { display:inline-block; width:5px; height:5px; background:var(--muted); border-radius:50%; animation:bounce .9s infinite; }
+  .dots span:nth-child(2) { animation-delay:.15s; }
+  .dots span:nth-child(3) { animation-delay:.30s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:.4} 40%{transform:translateY(-5px);opacity:1} }
+  .input-area { padding:20px 32px 24px; border-top:1px solid var(--border); flex-shrink:0; }
+  .compare-note { font-size:11px; color:var(--purple); background:rgba(188,140,255,.08); border:1px solid rgba(188,140,255,.2); border-radius:6px; padding:6px 12px; margin-bottom:10px; display:none; }
+  .compare-note.show { display:block; }
+  .input-box { display:flex; align-items:flex-end; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 14px; transition:border-color .2s; }
+  .input-box:focus-within { border-color:var(--accent); }
+  textarea { flex:1; background:none; border:none; outline:none; resize:none; color:var(--text); font-family:'Syne',sans-serif; font-size:14px; line-height:1.5; max-height:120px; overflow-y:auto; }
+  textarea::placeholder { color:var(--dim); }
+  .send-btn { width:36px; height:36px; border-radius:9px; background:var(--accent); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .15s,transform .1s; }
+  .send-btn:hover { background:var(--accent2); }
+  .send-btn:active { transform:scale(.94); }
+  .send-btn:disabled { background:var(--border); cursor:not-allowed; }
+  .send-btn svg { fill:#0d1117; }
+  .input-hint { font-size:11px; color:var(--dim); margin-top:8px; padding:0 4px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div>
+      <div class="sidebar-label">Mode</div>
+      <div class="mode-switcher">
+        <button class="mode-btn active" id="modeAsk" onclick="setMode('ask')">RAG Ask</button>
+        <button class="mode-btn" id="modeCompare" onclick="setMode('compare')">Compare</button>
+      </div>
+    </div>
+    <div>
+      <div class="sidebar-label">Settings</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Show local sources</span>
+        <label class="toggle">
+          <input type="checkbox" id="sourceToggle" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+    <div>
+      <div class="sidebar-label">API Status</div>
+      <div class="status-row">
+        <div class="dot" id="statusDot"></div>
+        <span id="statusText">Checking...</span>
+      </div>
+      <div class="status-row" style="margin-top:6px">
+        <span id="chunkCount" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)"></span>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:10px;overflow:hidden">
+      <div class="sidebar-label">Indexed Sources</div>
+      <div class="sources-list" id="sourcesList"><div style="font-size:12px;color:var(--dim)">Loading...</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Groundwater Policy Assistant</div>
+      <div class="topbar-meta" id="topbarMeta">RAG · pgvector · Gemini</div>
+    </div>
+    <div class="chat" id="chat">
+      <div class="empty" id="emptyState">
+        <div style="font-size:40px;opacity:.4">🌊</div>
+        <h2>Ask about Nebraska groundwater law</h2>
+        <p>Answers grounded in local policy documents. Switch to Compare mode to see RAG vs general Gemini side by side.</p>
+        <div class="suggestions">
+          <button class="suggestion-chip" onclick="suggest(this)">What permits are needed to drill a well?</button>
+          <button class="suggestion-chip" onclick="suggest(this)">What is the Nebraska Groundwater Management Act?</button>
+          <button class="suggestion-chip" onclick="suggest(this)">What are CPNRD rules for groundwater use?</button>
+          <button class="suggestion-chip" onclick="suggest(this)">How are recharge zones defined?</button>
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="compare-note" id="compareNote">
+        Compare mode: same question runs through RAG (local Nebraska docs) and plain Gemini (no local context) side by side.
+      </div>
+      <div class="input-box">
+        <textarea id="questionInput" placeholder="Ask a groundwater policy question..." rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendQuestion()">
+          <svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 8L15 1 8 15 7 9z"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let currentMode = 'ask';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('modeAsk').classList.toggle('active', mode === 'ask');
+  document.getElementById('modeCompare').classList.toggle('active', mode === 'compare');
+  document.getElementById('compareNote').classList.toggle('show', mode === 'compare');
+  document.getElementById('topbarMeta').textContent = mode === 'compare'
+    ? 'RAG vs General LLM · side by side' : 'RAG · pgvector · Gemini';
+}
+
+async function boot() {
+  try {
+    const r = await fetch(`${API}/rag/health`);
+    const d = await r.json();
+    if (d.status === 'ok') {
+      document.getElementById('statusDot').className = 'dot ok';
+      document.getElementById('statusText').textContent = 'Connected';
+      document.getElementById('chunkCount').textContent = `${d.docs_indexed} docs · ${d.chunks_indexed} chunks`;
+    } else { setErr(); }
+  } catch { setErr(); }
+  try {
+    const r = await fetch(`${API}/rag/sources`);
+    const docs = await r.json();
+    const list = document.getElementById('sourcesList');
+    list.innerHTML = '';
+    if (!docs.length) { list.innerHTML = '<div style="font-size:12px;color:var(--dim)">No docs indexed yet</div>'; return; }
+    docs.forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'source-pill';
+      el.textContent = d.title || d.doc_id;
+      list.appendChild(el);
+    });
+  } catch { document.getElementById('sourcesList').innerHTML = '<div style="font-size:12px;color:var(--dim)">Could not load sources</div>'; }
+}
+
+function setErr() {
+  document.getElementById('statusDot').className = 'dot err';
+  document.getElementById('statusText').textContent = 'API offline';
+}
+
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } }
+function suggest(btn) { document.getElementById('questionInput').value = btn.textContent; autoResize(document.getElementById('questionInput')); sendQuestion(); }
+
+function appendToChat(el) {
+  const chat = document.getElementById('chat');
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.remove();
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
+  return el;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+function riskClass(r) { return {low:'risk-low',medium:'risk-medium',high:'risk-high'}[r]||'risk-high'; }
+
+function buildSourcesPanel(sources) {
+  if (!sources || !sources.length) return '';
+  const cards = sources.map(s => `
+    <div class="source-card">
+      <div class="source-title">${esc(s.title)}</div>
+      <div class="source-url">${esc(s.url)}</div>
+      <div class="source-score">relevance score: ${s.relevance_score ?? s.score}</div>
+      ${s.excerpt ? `<div class="source-excerpt">${esc(s.excerpt)}</div>` : ''}
+    </div>`).join('');
+  return `<div class="sources-panel"><div class="sources-header">Local sources used <span class="sources-count">${sources.length}</span></div>${cards}</div>`;
+}
+
+function appendUserMsg(text) {
+  const el = document.createElement('div');
+  el.className = 'msg';
+  el.innerHTML = `<div class="msg-user">${esc(text)}</div>`;
+  return appendToChat(el);
+}
+
+function appendThinking(label) {
+  const el = document.createElement('div');
+  el.className = 'thinking';
+  el.innerHTML = `<div class="dots"><span></span><span></span><span></span></div><span>${label}</span>`;
+  return appendToChat(el);
+}
+
+function appendAskMsg(resp) {
+  const showSources = document.getElementById('sourceToggle').checked;
+  const el = document.createElement('div');
+  el.className = 'msg';
+  el.innerHTML = `
+    <div class="msg-rag">
+      <div class="rag-header">
+        <span class="rag-badge">RAG</span>
+        <span class="risk-badge ${riskClass(resp.hallucination_risk)}">hallucination risk: ${resp.hallucination_risk}</span>
+        <span class="conf-score">confidence ${(resp.confidence_score*100).toFixed(0)}%</span>
+      </div>
+      <div class="rag-body">${esc(resp.answer)}</div>
+      ${showSources ? buildSourcesPanel(resp.sources_used) : ''}
+    </div>`;
+  appendToChat(el);
+}
+
+function appendCompareMsg(resp) {
+  const showSources = document.getElementById('sourceToggle').checked;
+  const el = document.createElement('div');
+  el.className = 'msg';
+  el.innerHTML = `
+    <div class="compare-wrap">
+      <div class="compare-cols">
+        <div class="compare-col">
+          <div class="compare-col-label rag-lbl">RAG · Local Nebraska docs</div>
+          <div class="rag-header">
+            <span class="risk-badge ${riskClass(resp.rag_risk)}">hallucination risk: ${resp.rag_risk}</span>
+            <span class="conf-score">confidence ${(resp.rag_confidence*100).toFixed(0)}%</span>
+          </div>
+          <div class="rag-body">${esc(resp.rag_answer)}</div>
+          ${showSources ? buildSourcesPanel(resp.rag_sources) : ''}
+        </div>
+        <div class="compare-col">
+          <div class="compare-col-label gen-lbl">General Gemini · No local context</div>
+          <div class="rag-header">
+            <span class="risk-badge risk-high">no grounding</span>
+          </div>
+          <div class="gen-body">${esc(resp.general_answer)}</div>
+        </div>
+      </div>
+    </div>`;
+  appendToChat(el);
+}
+
+function appendErrorMsg(text) {
+  const el = document.createElement('div');
+  el.className = 'msg';
+  el.innerHTML = `<div class="msg-error">${esc(text)}</div>`;
+  appendToChat(el);
+}
+
+async function sendQuestion() {
+  const input = document.getElementById('questionInput');
+  const question = input.value.trim();
+  if (!question) return;
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  input.value = '';
+  input.style.height = 'auto';
+  appendUserMsg(question);
+
+  if (currentMode === 'compare') {
+    const thinking = appendThinking('Running RAG and General LLM in parallel...');
+    try {
+      const resp = await fetch(`${API}/rag/compare`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({question, top_k:8})
+      });
+      thinking.remove();
+      resp.ok ? appendCompareMsg(await resp.json()) : appendErrorMsg(`Server error ${resp.status}`);
+    } catch(e) { thinking.remove(); appendErrorMsg(`Could not reach API. Is the server running? (${e.message})`); }
+  } else {
+    const thinking = appendThinking('Searching policy documents...');
+    try {
+      const showSources = document.getElementById('sourceToggle').checked;
+      const resp = await fetch(`${API}/rag/ask`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({question, top_k:8, min_score:0.45, show_sources:showSources})
+      });
+      thinking.remove();
+      resp.ok ? appendAskMsg(await resp.json()) : appendErrorMsg(`Server error ${resp.status}`);
+    } catch(e) { thinking.remove(); appendErrorMsg(`Could not reach API. Is the server running? (${e.message})`); }
+  }
+  btn.disabled = false;
+  input.focus();
+}
+
+boot();
+</script>
+</body>
+</html>

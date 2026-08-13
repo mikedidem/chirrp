@@ -1,0 +1,138 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="guide-title">Start planning with Hydro-AI</h1>
+    <p class="subtitle">
+      A two-minute guided orientation — see how a stakeholder moves from a plain-language
+      question to a defensible groundwater planning decision.
+    </p>
+  </div>
+
+  <!-- ===== Journey strip ===== -->
+  <div class="card journey">
+    <div class="j-node">
+      <div class="j-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l1.9-5A8.5 8.5 0 1 1 21 11.5Z"/></svg></div>
+      <div class="j-title">Ask</div>
+      <div class="j-sub">Describe a scenario in plain words</div>
+    </div>
+    <div class="j-flow"></div>
+    <div class="j-node">
+      <div class="j-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7c3 0 3 2 6 2s3-2 6-2 3 2 6 2M3 12c3 0 3 2 6 2s3-2 6-2 3 2 6 2M3 17c3 0 3 2 6 2s3-2 6-2 3 2 6 2"/></svg></div>
+      <div class="j-title">Predict</div>
+      <div class="j-sub">Instant physics-based response</div>
+    </div>
+    <div class="j-flow"></div>
+    <div class="j-node">
+      <div class="j-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 21V9m7 12V4m7 17v-8"/></svg></div>
+      <div class="j-title">Compare</div>
+      <div class="j-sub">Weigh the options side by side</div>
+    </div>
+    <div class="j-flow"></div>
+    <div class="j-node">
+      <div class="j-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></div>
+      <div class="j-title">Decide</div>
+      <div class="j-sub">Act with confidence</div>
+    </div>
+  </div>
+
+  <!-- ===== Start here: 3 steps ===== -->
+  <h2 class="section-title">Start here — three steps</h2>
+  <div class="steps-grid">
+    <div class="card step-card">
+      <div class="step-num">1</div>
+      <h3>Explore a scenario</h3>
+      <p>Ask “what if we cut pumping by 15%?” in plain words and instantly see how the aquifer
+        responds — so you can weigh trade-offs before selecting an option.</p>
+      <a routerLink="/studio" class="btn btn-primary">Explore Scenarios</a>
+    </div>
+    <div class="card step-card">
+      <div class="step-num">2</div>
+      <h3>Compare options</h3>
+      <p>Put competing pumping plans side by side to see which keeps drawdown lowest while
+        staying inside the trained envelope.</p>
+      <a routerLink="/compare" class="btn btn-secondary">Compare options</a>
+    </div>
+    <div class="card step-card">
+      <div class="step-num">3</div>
+      <h3>Find allowable pumping limits</h3>
+      <p>Set the drawdown your community can tolerate and identify the maximum pumping rate that
+        stays within it — turning a limit into an actionable allocation.</p>
+      <a routerLink="/find-limits" class="btn btn-secondary">Find allowable limits</a>
+    </div>
+  </div>
+
+  <!-- ===== What each section does ===== -->
+  <h2 class="section-title">What each section does</h2>
+  <div class="card sections-card">
+    <a routerLink="/" class="sec-row">
+      <span class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 11h1v5"/></svg></span>
+      <span class="sec-name">Overview</span>
+      <span class="sec-desc">What the platform is and the headline results, at a glance.</span>
+    </a>
+    <a routerLink="/studio" class="sec-row">
+      <span class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l1.9-5A8.5 8.5 0 1 1 21 11.5Z"/></svg></span>
+      <span class="sec-name">Explore Scenarios</span>
+      <span class="sec-desc">Ask or speak a pumping scenario; get instant head/drawdown maps, a plain-language decision readout, and the regulations relevant to it.</span>
+    </a>
+    <a routerLink="/compare" class="sec-row">
+      <span class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 21V9m7 12V4m7 17v-8"/></svg></span>
+      <span class="sec-name">Compare</span>
+      <span class="sec-desc">Overlay scenarios with a clear takeaway — the lowest-impact option that still stays valid.</span>
+    </a>
+    <a routerLink="/accuracy" class="sec-row">
+      <span class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <span class="sec-name">Accuracy</span>
+      <span class="sec-desc">How the physics-informed AI surrogate compares to MODFLOW-2005 — real validation metrics, computed live.</span>
+    </a>
+    <a routerLink="/find-limits" class="sec-row">
+      <span class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 21v-6M4 11V3M12 21v-9M12 8V3M20 21v-4M20 13V3M1 15h6M9 8h6M17 17h6"/></svg></span>
+      <span class="sec-name">Find Limits</span>
+      <span class="sec-desc">Work backward from a drawdown limit to the maximum allowable pumping.</span>
+    </a>
+    <a routerLink="/regulations" class="sec-row">
+      <span class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2zM4 17h16"/></svg></span>
+      <span class="sec-name">Regulations</span>
+      <span class="sec-desc">Ask about Nebraska groundwater law; answers are grounded in policy documents with sources.</span>
+    </a>
+  </div>
+
+  <!-- ===== Good to know ===== -->
+  <h2 class="section-title">Good to know</h2>
+  <div class="card know-card">
+    <div class="know-item">
+      <span class="know-dot ok"></span>
+      <div>
+        <strong>Trustworthy by design.</strong> Every prediction shows its envelope status.
+        Requests outside the trained pumping range are <strong>rejected, not extrapolated</strong>.
+      </div>
+    </div>
+    <div class="know-item">
+      <span class="know-dot accent"></span>
+      <div>
+        <strong>Speak instead of type.</strong> Use the microphone button to dictate a
+        question. Review the text before sending.
+      </div>
+    </div>
+    <div class="know-item">
+      <span class="know-dot accent"></span>
+      <div>
+        <strong>Policy-aware.</strong> When you run a scenario, relevant Nebraska groundwater
+        regulations are surfaced alongside the result, with sources to review — planning
+        context, not a legal determination.
+      </div>
+    </div>
+    <div class="know-item">
+      <span class="know-dot accent"></span>
+      <div>
+        <strong>No setup to start.</strong> Most planning tools run without account setup.
+        Regulations Q&amp;A may depend on external service availability.
+      </div>
+    </div>
+    <div class="know-item">
+      <span class="know-dot warn"></span>
+      <div>
+        <strong>For planning, not advice.</strong> This is a planning and research
+        demonstration, not legal or operational advice.
+      </div>
+    </div>
+  </div>
+</div>

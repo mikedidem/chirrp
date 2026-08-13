@@ -1,0 +1,230 @@
+<div class="rag-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div>
+      <div class="sidebar-label">Mode</div>
+      <div class="mode-switcher">
+        <button 
+          class="mode-btn" 
+          [class.active]="currentMode() === 'ask'"
+          (click)="setMode('ask')">
+          RAG Ask
+        </button>
+        <button 
+          class="mode-btn" 
+          [class.active]="currentMode() === 'compare'"
+          (click)="setMode('compare')">
+          Compare
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">Settings</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Show local sources</span>
+        <label class="toggle">
+          <input type="checkbox" [ngModel]="showLocalSources()" (ngModelChange)="showLocalSources.set($event)">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">API Status</div>
+      <div class="status-row">
+        <div [class]="'dot ' + (statusConnected() ? 'ok' : 'err')"></div>
+        <span>{{ statusText() }}</span>
+      </div>
+      <div class="status-row" *ngIf="statusConnected()" style="margin-top:6px">
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)">
+          {{ docsIndexed() }} docs · {{ chunksIndexed() }} chunks
+        </span>
+      </div>
+      <button
+        type="button"
+        class="reindex-btn"
+        (click)="rebuildRagIndex()"
+        [disabled]="reindexing() || isLoading()">
+        {{ reindexing() ? 'Rebuilding index...' : 'Rebuild RAG Index' }}
+      </button>
+      <div *ngIf="reindexError()" class="reindex-error">
+        {{ reindexError() }}
+      </div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;gap:10px;overflow:hidden">
+      <div class="sidebar-label">Indexed Sources</div>
+      <div class="sources-list">
+        <div *ngIf="sourcesList().length === 0; else sourcesListTpl" style="font-size:12px;color:var(--dim)">
+          {{ statusConnected() ? 'No docs indexed yet' : 'Loading...' }}
+        </div>
+        <ng-template #sourcesListTpl>
+          <div *ngFor="let source of sourcesList()" class="source-pill">
+            {{ source.title || source.doc_id }}
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Regulations</div>
+        <div class="topbar-meta">
+          {{ currentMode() === 'compare' ? 'Grounded answer vs general AI · side by side' : 'Answers grounded in Nebraska groundwater law' }}
+        </div>
+      </div>
+      <button type="button" class="new-chat-btn" (click)="clearChat()" [disabled]="isLoading() && messages().length === 0">
+        New Chat
+      </button>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat">
+      <!-- Empty State -->
+      <div *ngIf="messages().length === 0" class="empty">
+        <div style="font-size:40px;opacity:.4">🌊</div>
+        <h2>Ask about Nebraska groundwater law</h2>
+        <p>Answers grounded in local policy documents. Switch to Compare mode to see RAG vs general Gemini side by side.</p>
+        <div class="suggestions">
+          <button 
+            *ngFor="let suggestion of suggestions"
+            class="suggestion-chip"
+            (click)="suggest(suggestion)">
+            {{ suggestion }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div *ngFor="let msg of messages()" class="msg">
+        <!-- User Message -->
+        <div *ngIf="msg.type === 'user'" class="msg-user">
+          {{ msg.content }}
+        </div>
+
+        <!-- Thinking Indicator -->
+        <div *ngIf="msg.type === 'thinking'" class="thinking">
+          <div class="dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span>{{ msg.label }}</span>
+        </div>
+
+        <!-- Ask Mode Response -->
+        <div *ngIf="msg.type === 'ask'" class="msg-rag">
+          <div class="rag-header">
+            <span class="rag-badge">RAG</span>
+            <span [class]="'risk-badge ' + riskClass(msg.data.hallucination_risk)">
+              hallucination risk: {{ msg.data.hallucination_risk }}
+            </span>
+            <span class="conf-score">
+              confidence {{ (msg.data.confidence_score * 100).toFixed(0) }}%
+            </span>
+          </div>
+          <div class="rag-body">
+            {{ msg.data.answer }}
+          </div>
+          <div *ngIf="showLocalSources() && msg.data.sources_used?.length > 0" class="sources-panel">
+            <div class="sources-header">
+              Local sources used
+              <span class="sources-count">{{ msg.data.sources_used.length }}</span>
+            </div>
+            <div *ngFor="let source of msg.data.sources_used" class="source-card">
+              <div class="source-title">{{ source.title }}</div>
+              <div class="source-url">{{ source.url }}</div>
+              <div class="source-score">relevance score: {{ getRelevanceScore(source) }}</div>
+              <div *ngIf="source.excerpt" class="source-excerpt">{{ source.excerpt }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Compare Mode Response -->
+        <div *ngIf="msg.type === 'compare'" class="compare-wrap">
+          <div class="compare-cols">
+            <div class="compare-col">
+              <div class="compare-col-label rag-lbl">RAG · Local Nebraska docs</div>
+              <div class="rag-header">
+                <span [class]="'risk-badge ' + riskClass(msg.data.rag_risk)">
+                  hallucination risk: {{ msg.data.rag_risk }}
+                </span>
+                <span class="conf-score">
+                  confidence {{ (msg.data.rag_confidence * 100).toFixed(0) }}%
+                </span>
+              </div>
+              <div class="rag-body">
+                {{ msg.data.rag_answer }}
+              </div>
+              <div *ngIf="showLocalSources() && msg.data.rag_sources?.length > 0" class="sources-panel">
+                <div class="sources-header">
+                  Local sources used
+                  <span class="sources-count">{{ msg.data.rag_sources.length }}</span>
+                </div>
+                <div *ngFor="let source of msg.data.rag_sources" class="source-card">
+                  <div class="source-title">{{ source.title }}</div>
+                  <div class="source-url">{{ source.url }}</div>
+                  <div class="source-score">relevance score: {{ getRelevanceScore(source) }}</div>
+                  <div *ngIf="source.excerpt" class="source-excerpt">{{ source.excerpt }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="compare-col">
+              <div class="compare-col-label gen-lbl">General Gemini · No local context</div>
+              <div class="rag-header">
+                <span class="risk-badge risk-high">no grounding</span>
+              </div>
+              <div class="gen-body">
+                {{ msg.data.general_answer }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="msg.type === 'error'" class="msg-error">
+          {{ msg.content }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+      <div class="compare-note" [class.show]="currentMode() === 'compare'">
+        Compare mode: same question runs through RAG (local Nebraska docs) and plain Gemini (no local context) side by side.
+      </div>
+      <div class="input-box">
+        <textarea 
+          #questionTextarea
+          class="input-textarea"
+          [ngModel]="questionInput()"
+          (ngModelChange)="questionInput.set($event)"
+          placeholder="Ask a groundwater policy question..."
+          rows="1"
+          (keydown)="handleKey($event)"
+          (input)="autoResize($event)"
+          [disabled]="isLoading()">
+        </textarea>
+        <app-mic-button
+          [text]="questionInput()"
+          (textChange)="questionInput.set($event)"
+          [disabled]="isLoading()" />
+        <button
+          class="send-btn"
+          (click)="sendQuestion()"
+          [disabled]="isLoading() || !questionInput().trim()">
+          <svg width="16" height="16" viewBox="0 0 16 16">
+            <path d="M1 8L15 1 8 15 7 9z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,235 @@
+<div class="page">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="hero-left">
+      <span class="hero-badge"><span class="badge-dot"></span> Hydro-AI Decision Support</span>
+      <h1 class="hero-title">See your aquifer's future — in plain language.</h1>
+      <p class="hero-lead">
+        Ask a question the way you'd say it out loud, and a physics-trained AI predicts how
+        the groundwater system responds — in milliseconds. Compare pumping scenarios, check
+        them against the trusted MODFLOW model, and turn the science into clear planning
+        decisions.
+      </p>
+
+      <!-- Conversational scenario entry -->
+      <div class="scenario-box">
+        <span class="sb-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l1.9-5A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+        </span>
+        <input
+          class="sb-input"
+          type="text"
+          [(ngModel)]="heroQuery"
+          (keyup.enter)="runHeroScenario()"
+          placeholder="What happens if pumping is reduced by 15% near the river wells?"
+        />
+        <app-mic-button [text]="heroQuery" (textChange)="heroQuery = $event" />
+        <button class="btn btn-primary sb-btn" (click)="runHeroScenario()">Run scenario</button>
+      </div>
+
+      <div class="hero-actions">
+        <a routerLink="/studio" class="btn btn-secondary">Explore Scenarios</a>
+        <a routerLink="/compare" class="btn btn-secondary">Compare Options</a>
+      </div>
+    </div>
+
+    <!-- Water-intelligence visualization -->
+    <div class="hero-viz" aria-hidden="true">
+      <div class="viz-orb"></div>
+      <svg class="aquifer" viewBox="0 0 440 380" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="topFace" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#23b6d6" stop-opacity="0.6" />
+            <stop offset="1" stop-color="#0a3047" stop-opacity="0.72" />
+          </linearGradient>
+          <linearGradient id="leftFace" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0e3149" stop-opacity="0.94" />
+            <stop offset="1" stop-color="#05172a" stop-opacity="0.97" />
+          </linearGradient>
+          <linearGradient id="rightFace" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#123c5b" stop-opacity="0.94" />
+            <stop offset="1" stop-color="#071f33" stop-opacity="0.97" />
+          </linearGradient>
+          <linearGradient id="satZone" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1aa7c4" stop-opacity="0.0" />
+            <stop offset="1" stop-color="#39dff2" stop-opacity="0.22" />
+          </linearGradient>
+          <radialGradient id="cone" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#02101c" stop-opacity="0.9" />
+            <stop offset="55%" stop-color="#0a3550" stop-opacity="0.3" />
+            <stop offset="100%" stop-color="#0a3550" stop-opacity="0" />
+          </radialGradient>
+          <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
+          <clipPath id="topClip">
+            <polygon points="220,72 370,150 220,228 70,150" />
+          </clipPath>
+        </defs>
+
+        <!-- side faces (semi-transparent aquifer body) -->
+        <polygon points="70,150 220,228 220,324 70,246" fill="url(#leftFace)" stroke="rgba(110,230,255,0.22)" />
+        <polygon points="370,150 220,228 220,324 370,246" fill="url(#rightFace)" stroke="rgba(110,230,255,0.22)" />
+        <!-- saturated-zone band on the lower faces -->
+        <polygon points="70,214 220,292 220,324 70,246" fill="url(#satZone)" />
+        <polygon points="370,214 220,292 220,324 370,246" fill="url(#satZone)" />
+        <!-- strata lines -->
+        <g stroke="rgba(124,247,255,0.16)" stroke-width="1">
+          <line x1="70" y1="182" x2="220" y2="260" /><line x1="220" y1="260" x2="370" y2="182" />
+          <line x1="70" y1="214" x2="220" y2="292" /><line x1="220" y1="292" x2="370" y2="214" />
+        </g>
+
+        <!-- top face -->
+        <polygon points="220,72 370,150 220,228 70,150" fill="url(#topFace)"
+                 stroke="rgba(124,247,255,0.55)" stroke-width="1.5" />
+
+        <!-- model-cell grid + cone contours, clipped to the top face -->
+        <g clip-path="url(#topClip)">
+          <g stroke="rgba(124,247,255,0.14)" stroke-width="0.8">
+            <line x1="250" y1="87.6" x2="100" y2="165.6" /><line x1="280" y1="103.2" x2="130" y2="181.2" />
+            <line x1="310" y1="118.8" x2="160" y2="196.8" /><line x1="340" y1="134.4" x2="190" y2="212.4" />
+            <line x1="190" y1="87.6" x2="340" y2="165.6" /><line x1="160" y1="103.2" x2="310" y2="181.2" />
+            <line x1="130" y1="118.8" x2="280" y2="196.8" /><line x1="100" y1="134.4" x2="250" y2="212.4" />
+          </g>
+          <ellipse cx="248" cy="150" rx="118" ry="59" fill="url(#cone)" />
+          <g fill="none" stroke="#7cf7ff">
+            <ellipse cx="248" cy="150" rx="24" ry="12" stroke-opacity="0.7" />
+            <ellipse cx="248" cy="150" rx="48" ry="24" stroke-opacity="0.52" />
+            <ellipse cx="248" cy="150" rx="74" ry="37" stroke-opacity="0.36" />
+            <ellipse cx="248" cy="150" rx="100" ry="50" stroke-opacity="0.24" />
+            <ellipse cx="248" cy="150" rx="126" ry="63" stroke-opacity="0.14" />
+          </g>
+          <!-- pulsing ripple at the well -->
+          <ellipse class="ripple" cx="248" cy="150" rx="20" ry="10" fill="none"
+                   stroke="#7cf7ff" stroke-width="1.5" />
+        </g>
+
+        <!-- pumping well -->
+        <line x1="248" y1="112" x2="248" y2="252" stroke="#7cf7ff" stroke-width="2.5" stroke-opacity="0.9" />
+        <circle class="well-glow" cx="248" cy="112" r="8" fill="#7cf7ff" filter="url(#soft)" />
+        <circle cx="248" cy="112" r="4.5" fill="#eaf7ff" />
+      </svg>
+
+      <div class="viz-chip chip-a"><span class="dot"></span> Physics-informed AI · ~110 ms <em>example run</em></div>
+      <div class="viz-chip chip-b">RMSE 0.18 m <em>validation sample</em></div>
+      <div class="viz-chip chip-c">MODFLOW ✓ verified</div>
+      <div class="viz-chip chip-d">Confidence · High</div>
+    </div>
+  </section>
+
+  <!-- ============ STAKEHOLDER VALUE ============ -->
+  <section class="value-grid">
+    <div class="card value-card">
+      <div class="v-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l1.9-5A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+      </div>
+      <h3>What you can ask</h3>
+      <p>“Reduce pumping by 15% — what happens to the wells?” Plain English, no model files.</p>
+    </div>
+    <div class="card value-card">
+      <div class="v-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 21V9m7 12V4m7 17v-8"/></svg>
+      </div>
+      <h3>What you can compare</h3>
+      <p>Put pumping scenarios side by side — drawdown, heads, and the trade-offs between them.</p>
+    </div>
+    <div class="card value-card">
+      <div class="v-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+      </div>
+      <h3>Decisions it supports</h3>
+      <p>Set sustainable limits, weigh allocations, and back policy with defensible evidence.</p>
+    </div>
+    <div class="card value-card">
+      <div class="v-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+      </div>
+      <h3>Why you can trust it</h3>
+      <p>Every answer is validated against MODFLOW, with accuracy and confidence shown openly.</p>
+    </div>
+  </section>
+
+  <!-- ============ DUAL ARCHITECTURE PIPELINE ============ -->
+  <section class="card pipeline-card">
+    <h2>An intelligent planning pipeline</h2>
+    <div class="pipeline">
+      <div class="pl-node">
+        <div class="pl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+        <div class="pl-title">Stakeholder</div>
+        <div class="pl-desc">“Reduce pumping by 15%.”</div>
+      </div>
+      <div class="pl-flow"></div>
+      <div class="pl-node accent">
+        <div class="pl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="5" width="14" height="14" rx="3"/><path d="M9 9h6v6H9zM2 10v4M22 10v4M10 2h4M10 22h4"/></svg></div>
+        <div class="pl-title">Semantic layer · LLM</div>
+        <div class="pl-desc">Parses language into a validated scenario and explains the result.</div>
+      </div>
+      <div class="pl-flow"></div>
+      <div class="pl-node accent">
+        <div class="pl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7c3 0 3 2 6 2s3-2 6-2 3 2 6 2M3 12c3 0 3 2 6 2s3-2 6-2 3 2 6 2M3 17c3 0 3 2 6 2s3-2 6-2 3 2 6 2"/></svg></div>
+        <div class="pl-title">Physical layer · PINN</div>
+        <div class="pl-desc">A physics-trained network solves the groundwater field in milliseconds.</div>
+      </div>
+      <div class="pl-flow"></div>
+      <div class="pl-node">
+        <div class="pl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Z"/><path d="M14 3v6h6M9 14l2 2 4-4"/></svg></div>
+        <div class="pl-title">Auditable answer</div>
+        <div class="pl-desc">Head maps, drawdown, assumptions, validity limits, latency.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EVIDENCE METRICS ============ -->
+  <div class="evidence-head">
+    <h2>Evidence &amp; performance</h2>
+    <span class="demo-note">Illustrative figures from validation runs — live accuracy is computed on the <a routerLink="/validate">Accuracy</a> page.</span>
+  </div>
+  <section class="evidence-grid">
+    <div class="card ev-card">
+      <div class="ev-label">Speed evidence</div>
+      <div class="ev-value">~110 <span class="ev-unit">ms</span></div>
+      <div class="ev-sub">Parameterized PINN surrogate · full field on CPU</div>
+      <div class="ev-tag">~300× faster than MODFLOW</div>
+    </div>
+    <div class="card ev-card">
+      <div class="ev-label">Accuracy against MODFLOW</div>
+      <div class="ev-value">0.18 <span class="ev-unit">m RMSE</span></div>
+      <div class="ev-sub">R² = 0.98 across the space-time field</div>
+      <div class="meter mt-1"><span style="width: 98%"></span></div>
+    </div>
+    <div class="card ev-card">
+      <div class="ev-label">MODFLOW verification</div>
+      <div class="ev-value ev-ok">Verified <span class="ev-check">✓</span></div>
+      <div class="ev-sub">surrogate checked cell-by-cell against mf2005</div>
+      <div class="ev-tag ok">physics-grounded</div>
+    </div>
+    <div class="card ev-card">
+      <div class="ev-label">Scenario validity envelope</div>
+      @if (meta(); as m) {
+        <div class="ev-value">{{ m.percent_bounds[0] | number: '1.0-1' }}% … +{{ m.percent_bounds[1] | number: '1.0-1' }}%</div>
+      } @else {
+        <div class="ev-value">−37.5% … +25%</div>
+      }
+      <div class="ev-sub">trained pumping range</div>
+      <div class="ev-tag">out-of-range requests are rejected, not extrapolated</div>
+    </div>
+    <div class="card ev-card">
+      <div class="ev-label">Model confidence / uncertainty</div>
+      <div class="ev-value">High</div>
+      <div class="ev-sub">inside the trained envelope</div>
+      <div class="meter mt-1"><span style="width: 92%"></span></div>
+    </div>
+  </section>
+
+  <!-- ============ MODEL EVIDENCE ============ -->
+  <section class="card problem-card">
+    <h2>Model evidence, in brief</h2>
+    <p class="text-muted problem-desc">
+      This platform compares fast physics-informed surrogate-model predictions against
+      MODFLOW-2005 simulations to show where scenario results are reliable, uncertain, or
+      outside the trained planning envelope. The goal is not only speed, but transparent,
+      defensible water-resources planning.
+    </p>
+  </section>
+</div>

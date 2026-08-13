@@ -1,0 +1,187 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Accuracy</h1>
+    <p class="subtitle">
+      How much can you trust the fast predictions? Here the <strong>parameterized PINN</strong>
+      is <strong>validated against MODFLOW-2005</strong> — the established groundwater
+      simulator — on the identical problem, cell by cell. The figures below are real,
+      computed from the run you select. The model is reliable <em>inside</em> its trained
+      pumping range; outside that range it is not validated and should not be used.
+    </p>
+  </div>
+
+  <section class="card mb-2">
+    <h2>Choose a pumping rate</h2>
+    @if (meta(); as m) {
+      <p class="card-hint">
+        Precomputed MODFLOW references exist at the anchor rates below (instant). Any other
+        rate triggers a live mf2005 run (~30–60 s).
+      </p>
+      <div class="anchor-row">
+        @for (q of m.reference_anchors; track q) {
+          <button
+            class="anchor-chip"
+            [class.selected]="selectedQ() === q"
+            (click)="runAnchor(q)"
+            [disabled]="busy()"
+          >
+            {{ q | number }}
+          </button>
+        }
+      </div>
+      <div class="custom-row">
+        <div class="grow">
+          <label class="field-label">Custom percent change (vs baseline {{ m.q_baseline | number }} m³/day)</label>
+          <input
+            class="input"
+            type="number"
+            placeholder="e.g. -7.5"
+            [(ngModel)]="customPercent"
+            [disabled]="busy()"
+          />
+        </div>
+        <label class="live-toggle">
+          <input type="checkbox" [(ngModel)]="live" [disabled]="busy()" />
+          force live mf2005 run
+        </label>
+        <button class="btn btn-primary" (click)="runCustom()" [disabled]="busy() || customPercent === null">
+          Compare engines
+        </button>
+      </div>
+      @if (needsLiveRun() && !busy()) {
+        <p class="alert alert-warn mt-1">
+          No precomputed reference at this rate — a live MODFLOW run will start (~30–60 s).
+        </p>
+      }
+    }
+    @if (busy()) {
+      <p class="alert alert-info mt-1">
+        <span class="spinner"></span>
+        Running comparison… a live MODFLOW run takes 30–60 s; the PINN part takes milliseconds.
+      </p>
+    }
+    @if (error(); as e) {
+      <p class="alert alert-danger mt-1">{{ e }}</p>
+    }
+  </section>
+
+  @if (result(); as r) {
+    <section class="card mb-2">
+      <div class="flex flex-wrap mb-2">
+        <h2 class="grow" style="margin: 0">
+          Q = {{ r.q_rate | number }} m³/day
+          ({{ r.percent_change > 0 ? '+' : '' }}{{ r.percent_change | number: '1.1-1' }}%)
+        </h2>
+        @if (r.precomputed) {
+          <span class="badge badge-info">precomputed MODFLOW reference</span>
+        } @else {
+          <span class="badge badge-warn">live mf2005 run</span>
+        }
+      </div>
+
+      <div class="metric-row">
+        <div class="metric metric-accent">
+          <div class="metric-label">RMSE</div>
+          <div class="metric-value">{{ r.metrics.rmse_m | number: '1.3-3' }} <span class="metric-unit">m</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">MAE</div>
+          <div class="metric-value">{{ r.metrics.mae_m | number: '1.3-3' }} <span class="metric-unit">m</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">R²</div>
+          <div class="metric-value">{{ r.metrics.r2 | number: '1.4-4' }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">RRMSE</div>
+          <div class="metric-value">{{ r.metrics.rrmse_pct | number: '1.2-2' }} <span class="metric-unit">%</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Max |error|</div>
+          <div class="metric-value">{{ r.metrics.max_abs_error_m | number: '1.2-2' }} <span class="metric-unit">m</span></div>
+        </div>
+        @if (r.latency.speedup) {
+          <div class="metric metric-accent">
+            <div class="metric-label">Speed-up</div>
+            <div class="metric-value">{{ r.latency.speedup | number: '1.0-0' }}×</div>
+          </div>
+        }
+      </div>
+      <p class="card-hint">
+        <strong>What these mean:</strong> RMSE / MAE are the average difference (in metres)
+        between the surrogate and MODFLOW heads; <strong>R²</strong> is how closely the
+        surrogate tracks MODFLOW (1.00 = perfect); <strong>RRMSE</strong> is that error
+        relative to the head range; <strong>max |error|</strong> is the single worst cell.
+      </p>
+
+      @if (reliability(); as rel) {
+        <div class="confidence-panel mt-2">
+          <div class="conf-row">
+            <span class="conf-title">Validation confidence</span>
+            <span class="conf-badge" [class.ok]="rel.tone === 'ok'"
+                  [class.warn]="rel.tone === 'warn'" [class.danger]="rel.tone === 'danger'">
+              <span class="env-dot"></span>{{ rel.label }}
+            </span>
+            <span class="envelope-pill ok"><span class="env-dot"></span>Within trained envelope</span>
+          </div>
+          <div class="meter mt-1"><span [style.width.%]="rel.pct"></span></div>
+          <p class="conf-note">
+            Computed from this run: R² = {{ r.metrics.r2 | number: '1.3-3' }},
+            RRMSE = {{ r.metrics.rrmse_pct | number: '1.2-2' }}%,
+            max error {{ r.metrics.max_abs_error_m | number: '1.2-2' }} m vs MODFLOW-2005.
+          </p>
+          <p class="conf-plain">
+            In plain terms: across the aquifer over 30 days, the AI surrogate's predicted heads
+            differ from MODFLOW-2005 by about <strong>{{ r.metrics.rmse_m | number: '1.2-2' }} m</strong>
+            on average (R² = {{ r.metrics.r2 | number: '1.2-2' }}).
+            @if (meta(); as m) {
+              Inside the trained pumping range
+              ({{ m.percent_bounds[0] | number: '1.0-1' }}% to +{{ m.percent_bounds[1] | number: '1.0-1' }}%)
+              this is reliable for planning.
+            }
+            Outside that range the model is not validated and should not be trusted —
+            out-of-range requests are rejected rather than extrapolated.
+          </p>
+        </div>
+      }
+
+      <p class="card-hint mt-1" style="margin-bottom: 0">
+        The largest errors concentrate at the well cell: the surrogate represents the well as a
+        smoothed (Gaussian) source while MODFLOW concentrates it in a single 3.3 m cell.
+      </p>
+    </section>
+
+    <div class="maps-grid mb-2">
+      @if (pinnMap(); as p) {
+        <div class="card map-card"><app-plotly-chart [data]="p.data" [layout]="p.layout" /></div>
+      }
+      @if (modflowMap(); as p) {
+        <div class="card map-card"><app-plotly-chart [data]="p.data" [layout]="p.layout" /></div>
+      }
+      @if (errorMap(); as p) {
+        <div class="card map-card"><app-plotly-chart [data]="p.data" [layout]="p.layout" /></div>
+      }
+    </div>
+
+    <div class="charts-grid">
+      @if (wellSeries(); as p) {
+        <div class="card"><app-plotly-chart [data]="p.data" [layout]="p.layout" /></div>
+      }
+      @if (rmseSeries(); as p) {
+        <div class="card"><app-plotly-chart [data]="p.data" [layout]="p.layout" /></div>
+      }
+      @if (latencyBar(); as p) {
+        <div class="card"><app-plotly-chart [data]="p.data" [layout]="p.layout" /></div>
+      } @else {
+        <div class="card latency-note">
+          <h2>Latency</h2>
+          <p class="text-muted">
+            PINN: {{ r.latency.pinn_ms | number: '1.0-0' }} ms for the full space-time field.
+            MODFLOW timing is recorded on live runs; precomputed references do not include a
+            measured runtime — check “force live mf2005 run” to benchmark both engines.
+          </p>
+        </div>
+      }
+    </div>
+  }
+</div>

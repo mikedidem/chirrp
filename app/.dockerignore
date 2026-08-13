@@ -1,0 +1,15 @@
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.mypy_cache
+**/.DS_Store
+
+.venv
+venv
+env
+
+hydroproject-ui/node_modules
+hydroproject-ui/.angular
+hydroproject-ui/dist

@@ -1,0 +1,22 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.8.0
+python-dotenv>=1.0.1
+sqlalchemy>=2.0.0
+asyncpg>=0.29.0
+psycopg[binary]>=3.2.0
+
+# PINN surrogate (physical layer) + MODFLOW validation
+torch>=2.2.0
+flopy>=3.9.3
+numpy>=1.24.0
+scipy>=1.10.0
+matplotlib>=3.7.0
+
+# LLM semantic layer + RAG
+langchain>=0.3.27
+langchain-google-genai>=2.1.9
+langgraph>=0.6.3
+beautifulsoup4>=4.12.3
+pypdf>=5.3.0
+requests>=2.32.3

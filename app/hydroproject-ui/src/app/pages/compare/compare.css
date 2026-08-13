@@ -1,0 +1,160 @@
+.compare-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.picker {
+  position: sticky;
+  top: 76px;
+}
+
+.pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.pick-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pick-item:hover {
+  border-color: var(--accent-border);
+  background: var(--surface-2);
+}
+
+.pick-item.on {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.pick-item .grow {
+  display: flex;
+  flex-direction: column;
+}
+
+.pick-name {
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.pick-meta {
+  font-size: 0.76rem;
+}
+
+.results .empty-state {
+  padding: 3.5rem 1.5rem;
+  text-align: center;
+}
+
+td.pos {
+  color: var(--danger);
+  font-weight: 650;
+}
+
+td.neg {
+  color: var(--ok);
+  font-weight: 650;
+}
+
+/* Stakeholder takeaway banner */
+.takeaway {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: linear-gradient(165deg, rgba(74, 222, 128, 0.1), rgba(10, 24, 38, 0.3));
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  border-left: 3px solid var(--ok);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.95rem;
+  margin-bottom: 1rem;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+.takeaway.warn {
+  background: linear-gradient(165deg, rgba(251, 191, 36, 0.1), rgba(10, 24, 38, 0.3));
+  border-color: rgba(251, 191, 36, 0.4);
+  border-left-color: var(--warn);
+}
+.tk-icon {
+  width: 9px; height: 9px; border-radius: 50%; margin-top: 0.4rem;
+  background: var(--ok); box-shadow: 0 0 10px var(--ok); flex-shrink: 0;
+}
+.takeaway.warn .tk-icon { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+
+.table-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 0.6rem;
+}
+
+.sc-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.base-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--blue);
+  background: var(--blue-soft);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+
+.env-chip {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ok);
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.32);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+.env-chip.near {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.best-row { background: var(--ok-soft); }
+.caution-row { background: var(--warn-soft); }
+
+.least-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ok);
+  background: rgba(74, 222, 128, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+.least-badge.caution {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: rgba(251, 191, 36, 0.4);
+}

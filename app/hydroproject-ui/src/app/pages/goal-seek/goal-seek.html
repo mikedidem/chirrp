@@ -1,0 +1,147 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Find Limits</h1>
+    <p class="subtitle">
+      Set the drawdown a location can tolerate and identify the maximum pumping rate that stays
+      within it — evaluated across the full trained range in under a second.
+    </p>
+  </div>
+
+  <div class="gs-grid">
+    <section class="card">
+      <h2>Planning constraint</h2>
+      <div class="form-grid">
+        <div>
+          <label class="field-label">Point of interest — x (m)</label>
+          <input class="input" type="number" [(ngModel)]="x" [disabled]="busy()" />
+        </div>
+        <div>
+          <label class="field-label">Point of interest — y (m)</label>
+          <input class="input" type="number" [(ngModel)]="y" [disabled]="busy()" />
+        </div>
+        <div>
+          <label class="field-label">Maximum allowed drawdown (m)</label>
+          <input class="input" type="number" [(ngModel)]="maxDrawdown" [disabled]="busy()" />
+        </div>
+        <div>
+          <label class="field-label">Evaluation time (days)</label>
+          <input class="input" type="number" [(ngModel)]="t" [disabled]="busy()" />
+        </div>
+      </div>
+      <p class="card-hint gs-hint">
+        Default point is the pumping well (201.7, −98.3); the domain is ±500 m, time 0–30 days.
+      </p>
+      <label class="verify-toggle">
+        <input type="checkbox" [(ngModel)]="verify" [disabled]="busy()" />
+        Optional MODFLOW-2005 verification (~30–60 s)
+      </label>
+      <div class="mt-2">
+        <button class="btn btn-primary" (click)="run()" [disabled]="busy() || maxDrawdown === null">
+          @if (busy()) {
+            <span class="spinner"></span> Evaluating…
+          } @else {
+            Find allowable limit
+          }
+        </button>
+      </div>
+      @if (error(); as e) {
+        <p class="alert alert-danger mt-2">{{ e }}</p>
+      }
+    </section>
+
+    <section class="card">
+      @if (result(); as r) {
+        @if (takeaway(); as t) {
+          <div class="takeaway" [class.warn]="t.tone === 'warn'" [class.danger]="t.tone === 'danger'">
+            <span class="tk-icon"></span><span>{{ t.text }}</span>
+          </div>
+        }
+
+        <div class="decision-readout"
+             [class.ok]="(envelopeStatus()?.tone ?? 'danger') === 'ok'"
+             [class.warn]="envelopeStatus()?.tone === 'warn'"
+             [class.danger]="!r.feasible || envelopeStatus()?.tone === 'danger'">
+          <div class="dr-title">Decision readout</div>
+
+          <div class="dr-metrics">
+            <div>
+              <div class="drm-label">{{ r.feasible ? 'Maximum allowable pumping' : 'Closest achievable' }}</div>
+              <div class="drm-value">{{ r.best_q_rate | number }} <span class="drm-unit">m³/day</span></div>
+              <div class="drm-sub">{{ r.best_percent_change > 0 ? '+' : '' }}{{ r.best_percent_change | number: '1.1-1' }}% vs baseline</div>
+            </div>
+            <div>
+              <div class="drm-label">Drawdown at point</div>
+              <div class="drm-value">{{ r.predicted_drawdown | number: '1.2-2' }} <span class="drm-unit">m</span></div>
+              <div class="drm-sub">limit {{ r.constraint.max_drawdown_m | number }} m</div>
+            </div>
+            <div>
+              <div class="drm-label">Evaluation time</div>
+              <div class="drm-value">{{ r.constraint.t | number }} <span class="drm-unit">days</span></div>
+              <div class="drm-sub">at ({{ r.constraint.x | number: '1.0-0' }}, {{ r.constraint.y | number: '1.0-0' }}) m</div>
+            </div>
+          </div>
+
+          <div class="dr-row">
+            <span class="dr-k">Model status</span>
+            <span class="dr-v">
+              @if (envelopeStatus(); as es) {
+                <span class="envelope-pill" [class.ok]="es.tone === 'ok'" [class.warn]="es.tone === 'warn'" [class.danger]="es.tone === 'danger'">
+                  <span class="env-dot"></span>{{ es.label }}
+                </span>
+              } @else {
+                <span class="envelope-pill danger"><span class="env-dot"></span>No feasible rate in trained range</span>
+              }
+            </span>
+          </div>
+
+          @if (confidence(); as c) {
+            <div class="dr-row">
+              <span class="dr-k">Confidence</span>
+              <span class="dr-v conf-inline">
+                <span class="conf-label" [class.ok]="c.tone === 'ok'" [class.warn]="c.tone === 'warn'" [class.danger]="c.tone === 'danger'">{{ c.label }}</span>
+                <span class="meter conf-meter"><span [style.width.%]="c.pct"></span></span>
+                <span class="text-muted conf-hint">depth inside trained envelope</span>
+              </span>
+            </div>
+          }
+
+          @if (r.modflow_verification; as v) {
+            <div class="dr-row">
+              <span class="dr-k">MODFLOW check</span>
+              <span class="dr-v">
+                <span class="envelope-pill" [class.ok]="v.satisfies_constraint" [class.danger]="!v.satisfies_constraint">
+                  <span class="env-dot"></span>{{ v.satisfies_constraint ? 'Constraint satisfied' : 'Constraint violated' }}
+                </span>
+                <span class="text-muted" style="margin-left: 0.5rem">
+                  {{ v.drawdown_m | number: '1.2-2' }} m · {{ v.runtime_s | number: '1.1-1' }} s
+                </span>
+              </span>
+            </div>
+          }
+
+          <div class="dr-row">
+            <span class="dr-k">Planning meaning</span>
+            <span class="dr-v">{{ planningMeaning() }}</span>
+          </div>
+
+          <div class="dr-foot text-muted">
+            {{ r.n_evaluations }} admissible pumping options evaluated in {{ r.latency_ms | number: '1.0-0' }} ms.
+          </div>
+        </div>
+
+        @if (curve(); as p) {
+          <app-plotly-chart [data]="p.data" [layout]="p.layout" />
+        }
+      } @else {
+        <div class="empty-state">
+          <h2>Set a planning constraint</h2>
+          <p class="text-muted">
+            Set a drawdown limit to identify the maximum pumping rate that stays within the
+            trained scenario envelope. The surrogate evaluates admissible pumping options in
+            under a second.
+          </p>
+        </div>
+      }
+    </section>
+  </div>
+</div>

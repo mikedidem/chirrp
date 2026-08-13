@@ -1,0 +1,415 @@
+/* ============================================================
+   Overview — deep-water AI planning cockpit
+   ============================================================ */
+
+/* ---------- Hero ---------- */
+
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: 2rem;
+  padding: 2.5rem 0 2rem;
+}
+
+.hero-left {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  padding: 0.34rem 0.85rem;
+  margin-bottom: 1.2rem;
+}
+
+.badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation: breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.5; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.hero-title {
+  font-size: 3rem;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.1rem;
+  background: linear-gradient(100deg, #eaf7ff 0%, #7cf7ff 55%, #18b7b8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-lead {
+  font-size: 1.08rem;
+  color: var(--ink-soft);
+  max-width: 56ch;
+  margin: 0 0 1.6rem;
+  line-height: 1.65;
+}
+
+/* Conversational scenario box */
+.scenario-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(8, 28, 48, 0.72);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  padding: 0.4rem 0.4rem 0.4rem 0.95rem;
+  margin-bottom: 1.1rem;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: border-color 0.15s, box-shadow 0.2s;
+}
+
+.scenario-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), var(--glow);
+}
+
+.sb-icon {
+  display: flex;
+  color: var(--accent-strong);
+  flex-shrink: 0;
+}
+.sb-icon svg { width: 20px; height: 20px; }
+
+.sb-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 0.95rem;
+}
+.sb-input::placeholder { color: var(--muted); }
+
+.sb-btn { flex-shrink: 0; border-radius: 999px; }
+
+.hero-actions {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.hero-actions .btn { text-decoration: none; }
+
+/* ripple at the well */
+.ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ripple 2.8s ease-out infinite;
+}
+@keyframes ripple {
+  0% { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(5); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .ripple { animation: none; } }
+
+/* ---------- Hero visualization ---------- */
+
+.hero-viz {
+  position: relative;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.viz-orb {
+  position: absolute;
+  inset: 6% 4%;
+  background: radial-gradient(circle at 60% 38%, rgba(57, 223, 242, 0.22), transparent 60%);
+  filter: blur(26px);
+  pointer-events: none;
+}
+
+.aquifer {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.5));
+  animation: float 7s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.well-glow { animation: pulse-glow 2.4s ease-in-out infinite; }
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.viz-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: rgba(8, 28, 48, 0.78);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+}
+
+.viz-chip .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 8px var(--accent);
+}
+
+.viz-chip em {
+  font-style: italic;
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 0.25rem;
+}
+
+.chip-a { top: 3%; right: 0; animation: float 7s ease-in-out infinite; }
+.chip-b { top: 25%; left: -3%; animation: float 8s ease-in-out infinite reverse; }
+.chip-c { bottom: 19%; left: 2%; border-color: rgba(74, 222, 128, 0.45); color: var(--ok); }
+.chip-d { bottom: 7%; right: 0; }
+.chip-e { bottom: 5%; left: 16%; color: var(--blue); border-color: rgba(59, 130, 246, 0.5); font-size: 0.7rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .aquifer, .chip-a, .chip-b, .badge-dot, .well-glow { animation: none; }
+}
+
+@media (max-width: 920px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-viz { min-height: 320px; margin-top: 1rem; }
+  .hero-title { font-size: 2.3rem; }
+}
+
+@media (max-width: 560px) {
+  .hero-title { font-size: 1.95rem; }
+  /* stack the scenario box so the input + button never overflow */
+  .scenario-box {
+    flex-wrap: wrap;
+    border-radius: var(--radius);
+    padding: 0.6rem;
+  }
+  .sb-input { width: 100%; order: 1; padding: 0.2rem 0.3rem; }
+  .sb-icon { order: 0; }
+  .sb-btn { order: 2; width: 100%; justify-content: center; }
+  .hero-viz { min-height: 270px; }
+  /* keep floating chips from spilling off tiny screens */
+  .viz-chip { font-size: 0.68rem; }
+  .chip-a { right: -2%; }
+  .chip-b { left: 0; }
+}
+
+/* ---------- Stakeholder value cards ---------- */
+
+.value-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.value-card {
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+}
+
+.value-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow), var(--glow);
+  border-color: var(--accent-border);
+}
+
+.v-icon {
+  width: 42px; height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-strong);
+  margin-bottom: 0.8rem;
+}
+
+.v-icon svg { width: 22px; height: 22px; }
+
+.value-card h3 { font-size: 1rem; margin-bottom: 0.35rem; }
+.value-card p { font-size: 0.88rem; color: var(--ink-soft); margin: 0; line-height: 1.55; }
+
+/* ---------- Pipeline ---------- */
+
+.pipeline-card { margin-bottom: 1.5rem; }
+
+.pipeline {
+  display: grid;
+  grid-template-columns: 1fr auto 1.3fr auto 1.3fr auto 1fr;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.pl-node {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  text-align: left;
+}
+
+.pl-node.accent {
+  border-color: var(--accent-border);
+  box-shadow: inset 0 0 24px rgba(57, 223, 242, 0.06);
+}
+
+.pl-icon {
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  margin-bottom: 0.6rem;
+}
+.pl-icon svg { width: 20px; height: 20px; }
+
+.pl-title { font-weight: 700; font-size: 0.86rem; margin-bottom: 0.25rem; }
+.pl-desc { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.5; }
+
+.pl-flow {
+  align-self: center;
+  width: 100%;
+  min-width: 28px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  position: relative;
+  overflow: hidden;
+}
+.pl-flow::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -40%;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, #eaf7ff, transparent);
+  animation: flow 2.4s linear infinite;
+}
+@keyframes flow { to { left: 110%; } }
+
+@media (max-width: 1000px) {
+  .pipeline { grid-template-columns: 1fr; }
+  .pl-flow {
+    width: 2px; height: 22px; justify-self: center;
+    background: linear-gradient(180deg, transparent, var(--accent), transparent);
+  }
+  .pl-flow::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { .pl-flow::after { animation: none; } }
+
+/* ---------- Evidence metrics ---------- */
+
+.evidence-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.evidence-head h2 { margin: 0; font-size: 1.15rem; }
+
+.demo-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.ev-card {
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+}
+.ev-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow), var(--glow);
+  border-color: var(--accent-border);
+}
+
+.ev-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.ev-value {
+  font-size: 1.7rem;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 22px rgba(57, 223, 242, 0.38);
+}
+
+.ev-value.ev-ok { color: var(--ok); text-shadow: 0 0 22px rgba(74, 222, 128, 0.35); }
+.ev-check { font-size: 1.1rem; }
+
+.ev-unit { font-size: 0.9rem; color: var(--muted); font-weight: 600; }
+
+.ev-sub { font-size: 0.82rem; color: var(--ink-soft); margin-top: 0.3rem; }
+
+.ev-tag {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem;
+}
+.ev-tag.ok {
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+/* ---------- Problem ---------- */
+
+.problem-card { margin-bottom: 1rem; }
+.problem-desc { max-width: 92ch; margin: 0; }

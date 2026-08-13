@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+.angular/
+.env
+*.env
+gemini_api.txt
+.DS_Store
+Thumbs.db

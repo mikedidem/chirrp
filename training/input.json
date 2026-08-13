@@ -1,0 +1,7 @@
+{
+  "river": { "stage": 320.0, "conductance": 100000.0 },
+  "drain": { "elevation": 200.0, "conductance": 50.0 },
+  "ghb": { "head": 302.5, "conductance": 110.0 },
+  "evapotranspiration": { "rate": 0.0005000000819563866 }
+}
+ 

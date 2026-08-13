@@ -1,0 +1,335 @@
+<div class="studio-shell">
+  <!-- ============ Sidebar: sessions ============ -->
+  <aside class="sidebar">
+    <!-- Participant switcher (local profiles, no auth) -->
+    <div class="participant-bar">
+      <label class="sidebar-title">Participant</label>
+      <div class="participant-row">
+        <select
+          class="input input-sm"
+          [value]="activeParticipantId() ?? ''"
+          (change)="setActiveParticipant($any($event.target).value || null)"
+        >
+          <option value="">— anonymous —</option>
+          @for (p of participants(); track p.id) {
+            <option [value]="p.id">{{ p.name }}{{ p.role ? ' (' + p.role + ')' : '' }}</option>
+          }
+        </select>
+        <button class="icon-btn" title="New participant" (click)="newParticipant()">＋</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" (click)="newSession()">+ New session</button>
+
+    <div class="sidebar-head">
+      <div class="sidebar-title">Sessions</div>
+      <div class="scope-toggle">
+        <button [class.active]="scope() === 'all'" (click)="setScope('all')">All</button>
+        <button [class.active]="scope() === 'mine'" (click)="setScope('mine')"
+                [disabled]="!activeParticipantId()">Mine</button>
+      </div>
+    </div>
+    <div class="session-list">
+      @for (s of sessions(); track s.id) {
+        <div
+          class="session-item"
+          [class.active]="s.id === activeSessionId()"
+          (click)="loadSession(s)"
+        >
+          <div class="grow">
+            <div class="session-name">{{ s.title }}</div>
+            <div class="session-meta">
+              {{ participantName(s.participant_id) }}{{ s.has_summary ? ' · ★ summarized' : '' }}
+            </div>
+          </div>
+          <button class="icon-btn" title="Rename" (click)="renameSession(s); $event.stopPropagation()">✎</button>
+          <button class="icon-btn" title="Delete" (click)="deleteSession(s, $event)">✕</button>
+        </div>
+      } @empty {
+        <p class="text-muted sidebar-empty">No sessions yet. Send a message to start one.</p>
+      }
+    </div>
+  </aside>
+
+  <!-- ============ Center: chat ============ -->
+  <main class="chat-col">
+    <div class="chat-header">
+      <div>
+        <h1>{{ activeSession()?.title || 'Explore Scenarios' }}</h1>
+        @if (meta(); as m) {
+          <p class="card-hint">
+            Trained envelope {{ m.percent_bounds[0] | number: '1.1-1' }}% to
+            +{{ m.percent_bounds[1] | number: '1.1-1' }}% pumping
+            (baseline {{ m.q_baseline | number }} m³/day).
+          </p>
+        }
+      </div>
+      @if (activeSessionId()) {
+        <button class="btn btn-ghost" (click)="generateSummary()" [disabled]="summarizing()">
+          {{ summarizing() ? 'Summarizing…' : 'Summary' }}
+        </button>
+      }
+    </div>
+
+    @if (summary(); as text) {
+      <div class="summary-card">
+        <div class="summary-head">What's been achieved</div>
+        <p>{{ text }}</p>
+      </div>
+    }
+
+    @if (activeSessionId()) {
+      <details class="decision-log">
+        <summary>Decision log ({{ notes().length }})</summary>
+        <div class="notes-list">
+          @for (n of notes(); track n.id) {
+            <div class="note" [class.note-decision]="n.kind === 'decision'">
+              <span class="note-kind">{{ n.kind === 'decision' ? '✔ decision' : 'note' }}</span>
+              <span class="note-by text-muted">{{ participantName(n.participant_id) }}</span>
+              <p class="note-text">{{ n.content }}</p>
+            </div>
+          } @empty {
+            <p class="text-muted note-empty">No notes yet. Record observations or decisions below.</p>
+          }
+        </div>
+        <div class="note-input">
+          <input class="input input-sm" type="text" placeholder="Add a note or decision…"
+                 [(ngModel)]="noteText" (keyup.enter)="addNote('note')" />
+          <app-mic-button [text]="noteText" (textChange)="noteText = $event" />
+          <button class="btn btn-secondary btn-sm" (click)="addNote('note')" [disabled]="!noteText.trim()">Note</button>
+          <button class="btn btn-primary btn-sm" (click)="addNote('decision')" [disabled]="!noteText.trim()">Decision</button>
+        </div>
+      </details>
+    }
+
+    <div class="chat-log">
+      @if (messages().length === 0) {
+        <div class="chat-empty">
+          <p class="text-muted">Describe a pumping scenario in plain language. Try:</p>
+          <div class="suggestion-chips">
+            <button class="chip-btn" (click)="instruction = 'Reduce pumping by 15 percent'; sendInstruction()">Reduce pumping by 15%</button>
+            <button class="chip-btn" (click)="instruction = 'Increase pumping by 10%'; sendInstruction()">Increase pumping by 10%</button>
+            <button class="chip-btn" (click)="instruction = 'Cut pumping by a quarter'; sendInstruction()">Cut pumping by a quarter</button>
+          </div>
+        </div>
+      }
+      @for (msg of messages(); track $index) {
+        <div class="bubble" [class.bubble-user]="msg.role === 'user'" [class.bubble-bot]="msg.role === 'assistant'">
+          @if (msg.role === 'assistant') {
+            <div class="bubble-head">
+              @if (msg.valid === true) {
+                <span class="badge badge-ok">valid scenario</span>
+              } @else if (msg.valid === false) {
+                <span class="badge badge-danger">rejected</span>
+              }
+              @if (msg.parse?.percent_change !== null && msg.parse?.percent_change !== undefined) {
+                <span class="chip">
+                  Δ pumping {{ msg.parse?.percent_change! > 0 ? '+' : '' }}{{ msg.parse?.percent_change | number: '1.0-1' }}%
+                </span>
+              }
+              @if (msg.parse?.source) {
+                <span class="chip">parsed by {{ msg.parse?.source }}</span>
+              }
+            </div>
+          }
+          <p class="bubble-text">{{ msg.text }}</p>
+          @if (msg.suggestion) {
+            <p class="bubble-suggestion">{{ msg.suggestion }}</p>
+          }
+          @if (msg.latency) {
+            <div class="latency-chips">
+              <span class="chip"><span class="chip-dot"></span>LLM {{ msg.latency.llm_parse_ms | number: '1.0-0' }} ms</span>
+              @if (msg.latency.pinn_ms !== undefined) {
+                <span class="chip"><span class="chip-dot"></span>PINN {{ msg.latency.pinn_ms | number: '1.0-0' }} ms</span>
+              }
+              @if (msg.latency.summary_ms !== undefined) {
+                <span class="chip"><span class="chip-dot"></span>summary {{ msg.latency.summary_ms | number: '1.0-0' }} ms</span>
+              }
+            </div>
+          }
+          @if (msg.savedAs) {
+            <p class="saved-note">saved as <span class="mono">{{ msg.savedAs }}</span></p>
+          }
+        </div>
+      }
+      @if (busy()) {
+        <div class="bubble bubble-bot"><span class="spinner"></span> working…</div>
+      }
+    </div>
+
+    <div class="composer">
+      <div class="chat-input">
+        <input
+          class="input"
+          type="text"
+          placeholder="Ask or describe a pumping scenario…"
+          [(ngModel)]="instruction"
+          (keyup.enter)="sendInstruction()"
+          [disabled]="busy()"
+        />
+        <app-mic-button [text]="instruction" (textChange)="instruction = $event" [disabled]="busy()" />
+        <button class="btn btn-primary" (click)="sendInstruction()" [disabled]="busy() || !instruction.trim()">
+          Send
+        </button>
+      </div>
+      <div class="composer-row">
+        <input
+          class="input input-sm"
+          type="text"
+          placeholder="scenario name (optional)"
+          [(ngModel)]="saveName"
+        />
+        <details class="manual-run">
+          <summary>Direct input (no LLM)</summary>
+          <div class="flex mt-1">
+            <input
+              class="input input-sm"
+              type="number"
+              placeholder="percent, e.g. -15"
+              [(ngModel)]="manualPercent"
+              [disabled]="busy()"
+            />
+            <button class="btn btn-secondary" (click)="runManual()" [disabled]="busy() || manualPercent === null">
+              Run
+            </button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ Right: results ============ -->
+  <section class="results-col" #resultsPanel>
+    @if (sim(); as s) {
+      <div class="results-head">
+        <h2 class="grow" style="margin: 0">
+          {{ s.percent_change > 0 ? '+' : '' }}{{ s.percent_change | number: '1.1-1' }}% pumping
+          <span class="text-muted">(Q = {{ s.q_rate | number }} m³/day)</span>
+        </h2>
+        <div class="flex">
+          <button class="btn btn-secondary btn-sm" (click)="exportPdf()" [disabled]="exporting()">
+            {{ exporting() ? 'Exporting…' : '⬇ Export PDF' }}
+          </button>
+          <div class="mode-toggle">
+            <button [class.active]="viewMode() === 'head'" (click)="viewMode.set('head')">Head</button>
+            <button [class.active]="viewMode() === 'drawdown'" (click)="viewMode.set('drawdown')">Drawdown</button>
+          </div>
+        </div>
+      </div>
+
+      @if (decisionReadout(); as dr) {
+        <div class="decision-readout" [class.ok]="dr.tone === 'ok'"
+             [class.warn]="dr.tone === 'warn'" [class.danger]="dr.tone === 'danger'">
+          <div class="dr-title">Decision readout</div>
+          <div class="dr-row"><span class="dr-k">Scenario</span><span class="dr-v">{{ dr.scenario }}</span></div>
+          <div class="dr-row"><span class="dr-k">Predicted response</span><span class="dr-v">{{ dr.response }}</span></div>
+          <div class="dr-row"><span class="dr-k">Model status</span>
+            <span class="dr-v">
+              <span class="envelope-pill" [class.ok]="dr.tone === 'ok'"
+                    [class.warn]="dr.tone === 'warn'" [class.danger]="dr.tone === 'danger'">
+                <span class="env-dot"></span>{{ dr.status }}
+              </span>
+            </span>
+          </div>
+          <div class="dr-row"><span class="dr-k">Planning meaning</span><span class="dr-v">{{ dr.meaning }}</span></div>
+        </div>
+      }
+
+      @if (policyLoading() || policyContext()) {
+        <div class="policy-context">
+          <div class="pc-title">Regulatory context</div>
+          @if (policyLoading()) {
+            <p class="pc-loading"><span class="spinner"></span> Checking Nebraska groundwater rules…</p>
+          } @else if (policyContext(); as pc) {
+            <p class="pc-note">{{ pc.note }}</p>
+            @if (pc.available) {
+              @for (s of pc.sources; track $index) {
+                <div class="pc-source">
+                  @if (s.url) {
+                    <a class="pc-src-title" [href]="s.url" target="_blank" rel="noopener">{{ s.title }}</a>
+                  } @else {
+                    <span class="pc-src-title">{{ s.title }}</span>
+                  }
+                  @if (s.excerpt) { <p class="pc-excerpt">{{ s.excerpt }}</p> }
+                </div>
+              }
+              <a routerLink="/regulations" class="pc-more">Ask a follow-up in Regulations →</a>
+            }
+          }
+        </div>
+      }
+
+      <div class="metric-row mb-2">
+        <div class="metric metric-accent">
+          <div class="metric-label">Max drawdown</div>
+          <div class="metric-value">{{ s.max_drawdown | number: '1.2-2' }} <span class="metric-unit">m</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Min head</div>
+          <div class="metric-value">{{ s.head_min | number: '1.2-2' }} <span class="metric-unit">m</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Drawdown at well (30 d)</div>
+          <div class="metric-value">
+            {{ s.well_drawdown_series[s.well_drawdown_series.length - 1] | number: '1.2-2' }}
+            <span class="metric-unit">m</span>
+          </div>
+        </div>
+      </div>
+
+      <app-plotly-chart [data]="mapData()" [layout]="mapLayout()" (plotClick)="onMapClick($event)" />
+
+      <div class="time-slider">
+        <span class="text-muted slider-label">t = {{ currentTime() }} d</span>
+        <input
+          type="range"
+          min="0"
+          [max]="s.times.length - 1"
+          [value]="timeIdx()"
+          (input)="onSliderInput($event)"
+        />
+      </div>
+
+      @if (probeReadout(); as p) {
+        <div class="alert alert-info probe-readout">
+          Probe at ({{ p.x | number: '1.0-0' }}, {{ p.y | number: '1.0-0' }}) m, t = {{ p.t }} d —
+          head <strong>{{ p.head | number: '1.3-3' }} m</strong>,
+          drawdown <strong>{{ p.drawdown | number: '1.3-3' }} m</strong>
+          <span class="text-muted">(mesh-free query, click anywhere on the map)</span>
+        </div>
+      } @else {
+        <p class="text-muted probe-hint">Tip: click anywhere on the map for an exact mesh-free head reading.</p>
+      }
+
+      <app-plotly-chart [data]="seriesData()" [layout]="seriesLayout" />
+    } @else {
+      <div class="empty-state">
+        <h2>No scenario yet</h2>
+        <p class="text-muted">
+          Send an instruction — the surrogate responds in milliseconds with the full
+          space-time head field.
+        </p>
+      </div>
+    }
+
+    <details class="history">
+      <summary (click)="refreshScenarios()">Saved scenarios ({{ scenarios().length }})</summary>
+      <div class="history-list">
+        @for (sc of scenarios(); track sc.scenario_name) {
+          <div class="history-item" (click)="loadScenario(sc)">
+            <div class="grow">
+              <div class="history-name mono">{{ sc.scenario_name }}</div>
+              <div class="history-meta text-muted">
+                Δ {{ sc.percent_change > 0 ? '+' : '' }}{{ sc.percent_change | number: '1.0-1' }}% ·
+                max drawdown {{ sc.max_drawdown | number: '1.2-2' }} m
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-del" (click)="deleteScenario(sc, $event)">✕</button>
+          </div>
+        } @empty {
+          <p class="text-muted history-empty">No saved scenarios yet.</p>
+        }
+      </div>
+    </details>
+  </section>
+</div>

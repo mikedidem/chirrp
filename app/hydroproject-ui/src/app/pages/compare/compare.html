@@ -1,0 +1,112 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Compare scenarios</h1>
+    <p class="subtitle">
+      Put 2–4 pumping scenarios side by side — overlaid drawdown curves and a delta table —
+      to support a planning decision. Each run is a millisecond surrogate evaluation.
+    </p>
+  </div>
+
+  <div class="compare-grid">
+    <!-- Picker -->
+    <section class="card picker">
+      <h2>Pick scenarios</h2>
+      <p class="card-hint">Selected: {{ itemCount() }} (need 2–4)</p>
+
+      <div class="pick-list">
+        @for (sc of scenarios(); track sc.scenario_name) {
+          <label class="pick-item" [class.on]="isSelected(sc.scenario_name)">
+            <input type="checkbox" [checked]="isSelected(sc.scenario_name)"
+                   (change)="toggle(sc.scenario_name)" />
+            <span class="grow">
+              <span class="pick-name">{{ friendlyLabel(sc) }}</span>
+              <span class="pick-meta text-muted">
+                Δ {{ sc.percent_change > 0 ? '+' : '' }}{{ sc.percent_change | number: '1.0-1' }}%
+                @if (sc.max_drawdown != null) {
+                  · max drawdown {{ sc.max_drawdown | number: '1.2-2' }} m
+                }
+              </span>
+            </span>
+          </label>
+        } @empty {
+          <p class="text-muted">No saved scenarios yet — run some in the Studio first, or use ad-hoc % below.</p>
+        }
+      </div>
+
+      <label class="field-label mt-2">Ad-hoc percent changes (comma-separated)</label>
+      <input class="input" type="text" placeholder="e.g. -15, 0, 10" [(ngModel)]="adhoc" />
+
+      <button class="btn btn-primary mt-2" (click)="runCompare()" [disabled]="busy()">
+        {{ busy() ? 'Comparing…' : 'Compare' }}
+      </button>
+      @if (error(); as e) {
+        <div class="alert alert-danger mt-2">{{ e }}</div>
+      }
+    </section>
+
+    <!-- Results -->
+    <section class="card results">
+      @if (result(); as r) {
+        @if (takeaway(); as t) {
+          <div class="takeaway" [class.warn]="t.tone === 'warn'">
+            <span class="tk-icon"></span>
+            <span>{{ t.text }}</span>
+          </div>
+        }
+
+        <app-plotly-chart [data]="overlayData()" [layout]="overlayLayout" />
+
+        <h3 class="mt-2">Comparison vs baseline</h3>
+        <p class="table-note">
+          Baseline = <strong>{{ r.baseline_label }}</strong> (first selected). Δ shows the change
+          from baseline; positive Δ means more drawdown. A scenario is only flagged as the
+          lowest-impact option when it also stays inside the trained envelope.
+        </p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Max drawdown (m)</th>
+              <th>Min head (m)</th>
+              <th>Well drawdown @30d (m)</th>
+              <th>Δ max drawdown</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of r.scenarios; track s.label; let i = $index) {
+              <tr [class.best-row]="s.label === bestLabel() && envClass(s.percent_change).kind === 'within'"
+                  [class.caution-row]="s.label === bestLabel() && envClass(s.percent_change).kind === 'near'">
+                <td>
+                  <div class="sc-cell">
+                    <strong>{{ s.label }}</strong>
+                    @if (i === 0) { <span class="base-badge">baseline</span> }
+                    <span class="env-chip" [class.near]="envClass(s.percent_change).kind === 'near'">
+                      {{ envClass(s.percent_change).label }}
+                    </span>
+                    @if (s.label === bestLabel()) {
+                      <span class="least-badge" [class.caution]="envClass(s.percent_change).kind === 'near'">
+                        least drawdown{{ envClass(s.percent_change).kind === 'near' ? ' · near edge' : '' }}
+                      </span>
+                    }
+                  </div>
+                </td>
+                <td>{{ s.max_drawdown | number: '1.2-2' }}</td>
+                <td>{{ s.head_min | number: '1.2-2' }}</td>
+                <td>{{ s.well_drawdown_final | number: '1.2-2' }}</td>
+                <td [class.pos]="r.deltas[i].d_max_drawdown > 0"
+                    [class.neg]="r.deltas[i].d_max_drawdown < 0">
+                  {{ r.deltas[i].d_max_drawdown > 0 ? '+' : '' }}{{ r.deltas[i].d_max_drawdown | number: '1.2-2' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="empty-state">
+          <h2>No comparison yet</h2>
+          <p class="text-muted">Pick scenarios on the left and press Compare.</p>
+        </div>
+      }
+    </section>
+  </div>
+</div>

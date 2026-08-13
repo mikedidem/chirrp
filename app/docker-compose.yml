@@ -1,0 +1,69 @@
+services:
+  db:
+    platform: linux/x86_64
+    image: pgvector/pgvector:pg16
+    container_name: llm_interface_db
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_DB: policy_rag
+    ports:
+      # Host 5433/5432 are taken by a native PostgreSQL on this machine,
+      # so expose the pgvector container on 5434 instead.
+      - "5434:5432"
+    volumes:
+      - llm_interface_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d policy_rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    dns:
+        - 8.8.8.8
+        - 1.1.1.1
+
+  backend:
+    platform: linux/x86_64
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: llm_interface_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: policy_rag
+      DATABASE_URL: postgresql://rag:rag@db:5432/policy_rag
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "
+      if [ -z \"$$GEMINI_API_KEY\" ] && [ -f /app/chirrp/gemini_api.txt ]; then
+        export GEMINI_API_KEY=$$(tr -d '\\r\\n' < /app/chirrp/gemini_api.txt);
+        export GOOGLE_API_KEY=$$(tr -d '\\r\\n' < /app/chirrp/gemini_api.txt);
+      fi;
+      cd chirrp/backend && python scripts/init_db.py && uvicorn main:app --host 0.0.0.0 --port 8000"
+    dns:
+        - 8.8.8.8
+        - 1.1.1.1
+  ui:
+    platform: linux/x86_64
+    build:
+      context: ./hydroproject-ui
+      dockerfile: Dockerfile
+    container_name: llm_interface_ui
+    depends_on:
+      - backend
+    ports:
+      - "4200:4200"
+   
+    dns:
+        - 8.8.8.8
+        - 1.1.1.1
+volumes:
+  llm_interface_pgdata:
