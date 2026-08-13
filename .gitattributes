@@ -1,0 +1,8 @@
+# MODFLOW model input/output data files (e.g. lrs_model.bas) get misdetected by
+# GitHub's language stats as QuickBASIC due to the .bas extension. They are
+# numerical-model data, not source code.
+training/modflow/** linguist-generated=true
+
+# Scraped regulatory reference pages (raw HTML), not hand-authored code.
+app/chirrp/rag_pipeline/data/raw/** linguist-generated=true
+app/chirrp/rag_pipeline/data/processed/** linguist-generated=true
