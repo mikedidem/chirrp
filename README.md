@@ -11,6 +11,14 @@ Lee, Yididiya Nadew, Chris Quinn, Kofi Akamai, Steve Q. Hu.
 > shared for review and reproducibility purposes only — see [License and
 > status](#license-and-status) below before reusing anything in it.
 
+**Contents:** [How to use](#how-to-use) ·
+[`app/`](#app-production-system) ·
+[`training/`](#training-pinn-surrogate) ·
+[What was left out](#left-out) ·
+[Reproducibility map](#reproducibility-map) ·
+[Status](#status) ·
+[License and status](#license-and-status)
+
 CHIRRP couples a natural-language LLM interface (the paper's "social layer")
 with a physics-informed neural network (PINN) surrogate of groundwater
 drawdown (the "physical layer"), so a stakeholder can ask a plain-language
@@ -24,6 +32,8 @@ study and Appendix A.
   <img src="docs/images/architecture-overview.png" alt="Hydro-AI dual-layer architecture: social (LLM) layer and physical (PINN surrogate) layer" width="850">
   <br><em>Figure 1 (paper) — dual-architecture overview: LLM social layer ↔ PINN physical layer.</em>
 </p>
+
+<a id="how-to-use"></a>
 
 ## How to use
 
@@ -105,6 +115,8 @@ chirrp/
 
 ---
 
+<a id="app-production-system"></a>
+
 ## `app/` — the production system
 
 FastAPI backend + Angular UI, packaged as a single Docker container and
@@ -149,6 +161,8 @@ docker run -p 7860:7860 -e DATABASE_URL=... -e RAG_DATABASE_URL=... chirrp
 ```
 
 ---
+
+<a id="training-pinn-surrogate"></a>
 
 ## `training/` — how the PINN surrogate was built
 
@@ -230,6 +244,8 @@ wasn't used by the deployed validation path.)
 
 ---
 
+<a id="left-out"></a>
+
 ## What was deliberately left out (and why)
 
 - **Secrets:** `.env`, `gemini_api.txt`, any `DATABASE_URL`/`GEMINI_API_KEY`
@@ -246,6 +262,8 @@ wasn't used by the deployed validation path.)
 - **`mf6.exe`:** not referenced by any training or app script (only
   `mf2005.exe` is actually used) — omitted to save 43 MB.
 
+<a id="reproducibility-map"></a>
+
 ## Reproducibility map (paper → repo)
 
 | Paper item | What it claims | Where it comes from in this repo |
@@ -258,6 +276,8 @@ wasn't used by the deployed validation path.)
 | §3.4, Table 6 (latency: 0.11 s CPU / 3.2 ms GPU / 5.7 s end-to-end) | Computational efficiency | `training/revalidate_full.py`; end-to-end timing in `app/chirrp/backend/controller/pinn_controller.py` |
 | Figure 2 / app screenshots (this README) | The implemented web application | `app/hydroproject-ui/` — live at https://morule-hydro.hf.space |
 | §4.4 Future Work (constraint-driven search) | Goal-seeking a scenario from a stakeholder constraint | `app/hydroproject-ui/src/app/pages/goal-seek/` (**Find Limits** page) |
+
+<a id="status"></a>
 
 ## Status
 
@@ -274,6 +294,7 @@ wasn't used by the deployed validation path.)
   evaluated with real stakeholders; single-well/homogeneous-aquifer scope
   only; no reproducible chat-to-model benchmark yet; GPU path exists but the
   deployed app currently runs CPU inference.
+
 ## License and status
 
 This repository accompanies a manuscript **currently under peer review**. It
