@@ -5,7 +5,7 @@
 
 **Paper:** *An End-to-End Hydro-AI Framework for Next-generation Participatory
 Water Resources Planning* — Ruopu Li, Michael Edidem, Pouria Kharazi, Hyungtak
-Lee, Yididiya Nadew, Chris Quinn, Kofi Akamai, Steve Q. Hu.
+Lee, Yididiya Nadew, Chris Quinn, Kofi Akamani, Steve Q. Hu.
 
 > **This manuscript is currently under peer review.** This repository is
 > shared for review and reproducibility purposes only — see [License and
